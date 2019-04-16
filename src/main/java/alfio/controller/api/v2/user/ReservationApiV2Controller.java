@@ -106,7 +106,7 @@ public class ReservationApiV2Controller {
         return ResponseEntity.ok(true);
     }
 
-    @PostMapping("/tmp/event/{eventName}/reservation/{reservationId}/back-to-booking")
+    @PostMapping("/event/{eventName}/reservation/{reservationId}/back-to-booking")
     public ResponseEntity<Boolean> backToBook(@PathVariable("eventName") String eventName,
                                               @PathVariable("reservationId") String reservationId) {
 
