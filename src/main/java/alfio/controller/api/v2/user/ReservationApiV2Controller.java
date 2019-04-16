@@ -95,7 +95,7 @@ public class ReservationApiV2Controller {
         return ResponseEntity.ok(b);
     }
 
-    @DeleteMapping("/tmp/event/{eventName}/reservation/{reservationId}")
+    @DeleteMapping("/event/{eventName}/reservation/{reservationId}")
     public ResponseEntity<Boolean> cancelPendingReservation(@PathVariable("eventName") String eventName,
                                                             @PathVariable("reservationId") String reservationId,
                                                             HttpServletRequest request) {
