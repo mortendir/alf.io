@@ -29,7 +29,6 @@ import alfio.repository.TicketReservationRepository;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -70,9 +69,9 @@ public class ReservationApiV2Controller {
                                             @PathVariable("reservationId") String reservationId) {
         Optional<Event> event = eventRepository.findOptionalByShortName(eventName);
         if (event.isEmpty()) {
-            return new ResponseEntity<>("redirect:/", HttpStatus.OK);
+            return ResponseEntity.ok("redirect:/");
         }
-        return new ResponseEntity<>(reservationController.redirectReservation(ticketReservationManager.findById(reservationId), eventName, reservationId), HttpStatus.OK);
+        return ResponseEntity.ok(reservationController.redirectReservation(ticketReservationManager.findById(reservationId), eventName, reservationId));
     }
 
 
@@ -93,7 +92,7 @@ public class ReservationApiV2Controller {
         }
         var r = new HashMap<>(model.asMap());
         var b = new BookingInfo((List<TicketsByTicketCategory>) r.get("ticketsByCategory"));
-        return new ResponseEntity<>(b, HttpStatus.OK);
+        return ResponseEntity.ok(b);
     }
 
     @DeleteMapping("/tmp/event/{eventName}/reservation/{reservationId}")
@@ -104,7 +103,7 @@ public class ReservationApiV2Controller {
         //FIXME check precondition (see ReservationController.redirectIfNotValid)
         ticketReservationManager.cancelPendingReservation(reservationId, false, null);
         SessionUtil.cleanupSession(request);
-        return new ResponseEntity<>(true, HttpStatus.OK);
+        return ResponseEntity.ok(true);
     }
 
     @PostMapping("/tmp/event/{eventName}/reservation/{reservationId}/back-to-booking")
@@ -114,7 +113,7 @@ public class ReservationApiV2Controller {
         //FIXME check precondition (see ReservationController.redirectIfNotValid)
 
         ticketReservationRepository.updateValidationStatus(reservationId, false);
-        return new ResponseEntity<>(true, HttpStatus.OK);
+        return ResponseEntity.ok(true);
     }
 
     @PostMapping("/tmp/event/{eventName}/reservation/{reservationId}")
@@ -134,7 +133,7 @@ public class ReservationApiV2Controller {
             session);
         Map<String, Object> mapRes = new HashMap<>();
         mapRes.put("viewState", res);
-        return new ResponseEntity<>(mapRes, HttpStatus.OK);
+        return ResponseEntity.ok(mapRes);
     }
 
     @PostMapping("/tmp/event/{eventName}/reservation/{reservationId}/validate-to-overview")
@@ -152,7 +151,7 @@ public class ReservationApiV2Controller {
         var model = new HashMap<String, Object>();
         model.put("viewState", res);
         //model.put("bindingResult", bindingResult.getModel()); <- cause 400 error
-        return new ResponseEntity<>(model, HttpStatus.OK);
+        return ResponseEntity.ok(model);
     }
 
     @GetMapping("/tmp/event/{eventName}/reservation/{reservationId}/overview")
@@ -163,7 +162,7 @@ public class ReservationApiV2Controller {
                                HttpSession session) {
         var res = reservationController.showOverview(eventName, reservationId, locale, model, session);
         model.addAttribute("viewState", res);
-        return new ResponseEntity<>(model.asMap(), HttpStatus.OK);
+        return ResponseEntity.ok(model.asMap());
     }
 
     @GetMapping("/tmp/event/{eventName}/reservation/{reservationId}/success")
@@ -181,7 +180,19 @@ public class ReservationApiV2Controller {
             model.addAttribute("ticketsByCategory", ticketsByCategory.stream().map(a -> new TicketsByTicketCategory(a.getKey(), a.getValue())).collect(Collectors.toList()));
         }
 
-        return new ResponseEntity<>(model.asMap(), HttpStatus.OK);
+        return ResponseEntity.ok(model.asMap());
+    }
+
+
+    @PostMapping("/event/{eventName}/reservation/{reservationId}/re-send-email")
+    public ResponseEntity<Boolean> reSendReservationConfirmationEmail(@PathVariable("eventName") String eventName,
+                                                     @PathVariable("reservationId") String reservationId, HttpServletRequest request) {
+        var res = reservationController.reSendReservationConfirmationEmail(eventName, reservationId, request);
+        if(res.endsWith("confirmation-email-sent=true")) {
+            return ResponseEntity.ok(true);
+        } else {
+            return ResponseEntity.ok(false);
+        }
     }
 
 }

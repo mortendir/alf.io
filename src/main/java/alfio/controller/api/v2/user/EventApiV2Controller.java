@@ -160,7 +160,7 @@ public class EventApiV2Controller {
                 .substring(redirectResult.lastIndexOf("reservation/")+"reservation/".length())
                 .replace("/book", "");
             redirectAttributes.addAttribute("reservationIdentifier", reservationIdentifier);
-            return new ResponseEntity<>(redirectAttributes.asMap(), HttpStatus.OK);
+            return ResponseEntity.ok(redirectAttributes.asMap());
         }
 
     }
