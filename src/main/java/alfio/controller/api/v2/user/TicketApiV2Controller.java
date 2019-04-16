@@ -52,6 +52,14 @@ public class TicketApiV2Controller {
         ticketController.generateTicketPdf(eventName, ticketIdentifier, request, response);
     }
 
+    @PostMapping("/event/{eventName}/ticket/{ticketIdentifier}/send-ticket-by-email")
+    public ResponseEntity<Boolean> sendTicketByEmail(@PathVariable("eventName") String eventName,
+                                    @PathVariable("ticketIdentifier") String ticketIdentifier,
+                                    HttpServletRequest request) {
+        var res = ticketController.sendTicketByEmail(eventName, ticketIdentifier, request);
+        return "OK".equals(res) ? ResponseEntity.ok(true) : ResponseEntity.notFound().build();
+    }
+
 
     @GetMapping("/event/{eventName}/ticket/{ticketIdentifier}")
     public ResponseEntity<TicketInfo> getTicketInfo(@PathVariable("eventName") String eventName,
