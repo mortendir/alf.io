@@ -22,11 +22,9 @@ import alfio.manager.TicketReservationManager;
 import alfio.repository.TicketCategoryRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
@@ -45,6 +43,13 @@ public class TicketApiV2Controller {
     public void showQrCode(@PathVariable("eventName") String eventName,
                            @PathVariable("ticketIdentifier") String ticketIdentifier, HttpServletResponse response) throws IOException {
         ticketController.generateTicketCode(eventName, ticketIdentifier, response);
+    }
+
+    @GetMapping("/event/{eventName}/ticket/{ticketIdentifier}/download-ticket")
+    public void generateTicketPdf(@PathVariable("eventName") String eventName,
+                                  @PathVariable("ticketIdentifier") String ticketIdentifier,
+                                  HttpServletRequest request, HttpServletResponse response) throws IOException {
+        ticketController.generateTicketPdf(eventName, ticketIdentifier, request, response);
     }
 
 
