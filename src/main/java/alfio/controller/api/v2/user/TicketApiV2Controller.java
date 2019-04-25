@@ -17,16 +17,22 @@
 package alfio.controller.api.v2.user;
 
 import alfio.controller.TicketController;
+import alfio.controller.api.ReservationApiController;
 import alfio.controller.api.v2.user.model.TicketInfo;
+import alfio.controller.form.UpdateTicketOwnerForm;
 import alfio.manager.TicketReservationManager;
 import alfio.repository.TicketCategoryRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @AllArgsConstructor
@@ -35,6 +41,7 @@ public class TicketApiV2Controller {
 
 
     private final TicketController ticketController;
+    private final ReservationApiController reservationApiController;
     private final TicketReservationManager ticketReservationManager;
     private final TicketCategoryRepository ticketCategoryRepository;
 
@@ -84,6 +91,19 @@ public class TicketApiV2Controller {
             ticketReservationManager.getShortReservationID(data.getLeft(), data.getMiddle()));
 
         return ResponseEntity.ok(ticketInfo);
+    }
+
+    @PostMapping("/tmp/event/{eventName}/ticket/{ticketIdentifier}/assign")
+    public Map<String, Object> updateTicketInfo(@PathVariable("eventName") String eventName,
+                                                @PathVariable("ticketIdentifier") String ticketIdentifier,
+                                                @RequestParam(value = "single-ticket", required = false, defaultValue = "false") boolean singleTicket,
+                                                @RequestBody UpdateTicketOwnerForm updateTicketOwner,
+                                                BindingResult bindingResult,
+                                                HttpServletRequest request,
+                                                Model model,
+                                                Authentication authentication) {
+        return reservationApiController.assignTicketToPerson(eventName, ticketIdentifier, singleTicket, updateTicketOwner,
+            bindingResult, request, model, authentication);
     }
 
 }

@@ -217,7 +217,7 @@ public class ReservationFlowIntegrationTest extends BaseIntegrationTest {
 
         //
 
-        reservationApiController = new ReservationApiController(eventRepository, ticketHelper, mock(TemplateManager.class), i18nManager, ticketReservationRepository, ticketReservationManager);
+        reservationApiController = new ReservationApiController(ticketHelper, mock(TemplateManager.class), i18nManager);
         invoiceReceiptController = new InvoiceReceiptController(eventRepository, ticketReservationManager, fileUploadManager, templateManager, configurationManager, extensionManager);
 
         //promo code at event level
