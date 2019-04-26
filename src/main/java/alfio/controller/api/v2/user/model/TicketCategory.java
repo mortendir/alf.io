@@ -41,4 +41,8 @@ public class TicketCategory {
     public Map<String, String> getDescription() {
         return description;
     }
+
+    public boolean isFree() {
+        return ticketCategory.getFree();
+    }
 }

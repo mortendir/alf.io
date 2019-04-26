@@ -24,6 +24,7 @@ import alfio.controller.support.TicketDecorator;
 import alfio.manager.TicketReservationManager;
 import alfio.model.Event;
 import alfio.model.TicketCategory;
+import alfio.model.TicketReservation;
 import alfio.repository.EventRepository;
 import alfio.repository.TicketReservationRepository;
 import lombok.AllArgsConstructor;
@@ -60,6 +61,9 @@ public class ReservationApiV2Controller {
     @AllArgsConstructor
     @Getter
     public static class BookingInfo {
+        private final String firstName;
+        private final String lastName;
+        private final String email;
         List<TicketsByTicketCategory> ticketsByCategory;
     }
 
@@ -81,18 +85,16 @@ public class ReservationApiV2Controller {
                                                          @PathVariable("reservationId") String reservationId,
                                                          Model model,
                                                          Locale locale) {
-        var res = reservationController.showBookingPage(eventName, reservationId, model, locale);
-        //FIXME temporary
-        model.addAttribute("viewState", res);
+        reservationController.showBookingPage(eventName, reservationId, model, locale);
+        //
+        var ticketsByCategory = ((List<Pair<TicketCategory, List<TicketDecorator>>>) model.asMap().get("ticketsByCategory"))
+            .stream()
+            .map(a -> new TicketsByTicketCategory(a.getKey(), a.getValue()))
+            .collect(Collectors.toList());
 
-        //overwrite with a better model object...
-        var ticketsByCategory = (List<Pair<TicketCategory, List<TicketDecorator>>>) model.asMap().get("ticketsByCategory");
-        if (ticketsByCategory != null) {
-            model.addAttribute("ticketsByCategory", ticketsByCategory.stream().map(a -> new TicketsByTicketCategory(a.getKey(), a.getValue())).collect(Collectors.toList()));
-        }
-        var r = new HashMap<>(model.asMap());
-        var b = new BookingInfo((List<TicketsByTicketCategory>) r.get("ticketsByCategory"));
-        return ResponseEntity.ok(b);
+        var reservation = (TicketReservation) model.asMap().get("reservation");
+
+        return ResponseEntity.ok(new BookingInfo(reservation.getFirstName(), reservation.getLastName(), reservation.getEmail(), ticketsByCategory));
     }
 
     @DeleteMapping("/event/{eventName}/reservation/{reservationId}")
