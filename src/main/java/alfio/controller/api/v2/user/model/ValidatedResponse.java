@@ -35,9 +35,9 @@ public class ValidatedResponse<T> {
         var transformed = bindingResult.getAllErrors().stream().map(objectError -> {
             if (objectError instanceof FieldError) {
                 var fe = (FieldError) objectError;
-                return new ValidationResult.ErrorDescriptor(fe.getField(), fe.getCode());
+                return new ValidationResult.ErrorDescriptor(fe.getField(), "", fe.getCode());
             } else {
-                return new ValidationResult.ErrorDescriptor(objectError.getObjectName(), objectError.getCode());
+                return new ValidationResult.ErrorDescriptor(objectError.getObjectName(), "", objectError.getCode());
             }
         }).collect(Collectors.toList());
 

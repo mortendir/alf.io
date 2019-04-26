@@ -17,22 +17,23 @@
 package alfio.controller.api.v2.user;
 
 import alfio.controller.TicketController;
-import alfio.controller.api.ReservationApiController;
+import alfio.controller.api.support.TicketHelper;
 import alfio.controller.api.v2.user.model.TicketInfo;
+import alfio.controller.api.v2.user.model.ValidatedResponse;
 import alfio.controller.form.UpdateTicketOwnerForm;
 import alfio.manager.TicketReservationManager;
 import alfio.repository.TicketCategoryRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.ui.Model;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @AllArgsConstructor
@@ -41,7 +42,7 @@ public class TicketApiV2Controller {
 
 
     private final TicketController ticketController;
-    private final ReservationApiController reservationApiController;
+    private final TicketHelper ticketHelper;
     private final TicketReservationManager ticketReservationManager;
     private final TicketCategoryRepository ticketCategoryRepository;
 
@@ -93,17 +94,28 @@ public class TicketApiV2Controller {
         return ResponseEntity.ok(ticketInfo);
     }
 
-    @PostMapping("/tmp/event/{eventName}/ticket/{ticketIdentifier}/assign")
-    public Map<String, Object> updateTicketInfo(@PathVariable("eventName") String eventName,
-                                                @PathVariable("ticketIdentifier") String ticketIdentifier,
-                                                @RequestParam(value = "single-ticket", required = false, defaultValue = "false") boolean singleTicket,
-                                                @RequestBody UpdateTicketOwnerForm updateTicketOwner,
-                                                BindingResult bindingResult,
-                                                HttpServletRequest request,
-                                                Model model,
-                                                Authentication authentication) {
-        return reservationApiController.assignTicketToPerson(eventName, ticketIdentifier, singleTicket, updateTicketOwner,
-            bindingResult, request, model, authentication);
+    @PutMapping("/event/{eventName}/ticket/{ticketIdentifier}")
+    public ValidatedResponse<Boolean> updateTicketInfo(@PathVariable("eventName") String eventName,
+                                              @PathVariable("ticketIdentifier") String ticketIdentifier,
+                                              @RequestParam(value = "single-ticket", required = false, defaultValue = "false") boolean singleTicket,
+                                              @RequestBody UpdateTicketOwnerForm updateTicketOwner,
+                                              BindingResult bindingResult,
+                                              HttpServletRequest request,
+                                              Authentication authentication) {
+
+        Optional<UserDetails> userDetails = Optional.ofNullable(authentication)
+            .map(Authentication::getPrincipal)
+            .filter(UserDetails.class::isInstance)
+            .map(UserDetails.class::cast);
+
+        var assignmentResult = ticketHelper.assignTicket(eventName,
+            ticketIdentifier,
+            updateTicketOwner,
+            Optional.of(bindingResult),
+            request, t -> { },
+            userDetails, false);
+
+        return assignmentResult.map(r -> new ValidatedResponse<>(r.getLeft(), r.getLeft().isSuccess())).orElseThrow(IllegalStateException::new);
     }
 
 }
