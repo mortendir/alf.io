@@ -17,6 +17,8 @@
 package alfio.controller.api.v2.user;
 
 import alfio.controller.ReservationController;
+import alfio.controller.api.v2.user.model.BookingInfo;
+import alfio.controller.api.v2.user.model.BookingInfo.TicketsByTicketCategory;
 import alfio.controller.api.v2.user.model.ValidatedResponse;
 import alfio.controller.form.ContactAndTicketsForm;
 import alfio.controller.form.PaymentForm;
@@ -29,7 +31,6 @@ import alfio.model.TicketReservation;
 import alfio.repository.EventRepository;
 import alfio.repository.TicketReservationRepository;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
@@ -52,22 +53,6 @@ public class ReservationApiV2Controller {
     private final TicketReservationManager ticketReservationManager;
     private final TicketReservationRepository ticketReservationRepository;
 
-    @AllArgsConstructor
-    @Getter
-    public static class TicketsByTicketCategory {
-        private final TicketCategory ticketCategory;
-        private final List<TicketDecorator> tickets;
-    }
-
-    @AllArgsConstructor
-    @Getter
-    public static class BookingInfo {
-        private final String firstName;
-        private final String lastName;
-        private final String email;
-        List<TicketsByTicketCategory> ticketsByCategory;
-    }
-
 
     @GetMapping("/tmp/event/{eventName}/reservation/{reservationId}/status")
     public ResponseEntity<String> getStatus(@PathVariable("eventName") String eventName,
@@ -81,16 +66,16 @@ public class ReservationApiV2Controller {
 
 
 
-    @GetMapping("/tmp/event/{eventName}/reservation/{reservationId}/book")
+    @GetMapping("/event/{eventName}/reservation/{reservationId}/booking-info")
     public ResponseEntity<BookingInfo> getBookingInfo(@PathVariable("eventName") String eventName,
-                                                         @PathVariable("reservationId") String reservationId,
-                                                         Model model,
-                                                         Locale locale) {
+                                                      @PathVariable("reservationId") String reservationId,
+                                                      Model model,
+                                                      Locale locale) {
         reservationController.showBookingPage(eventName, reservationId, model, locale);
         //
         var ticketsByCategory = ((List<Pair<TicketCategory, List<TicketDecorator>>>) model.asMap().get("ticketsByCategory"))
             .stream()
-            .map(a -> new TicketsByTicketCategory(a.getKey(), a.getValue()))
+            .map(a -> new TicketsByTicketCategory(a.getKey().getName(), toBookingInfoTicket(a.getValue())))
             .collect(Collectors.toList());
 
         var reservation = (TicketReservation) model.asMap().get("reservation");
@@ -174,7 +159,9 @@ public class ReservationApiV2Controller {
         model.addAttribute("viewState", res);
         var ticketsByCategory = (List<Pair<TicketCategory, List<TicketDecorator>>>) model.asMap().get("ticketsByCategory");
         if (ticketsByCategory != null) {
-            model.addAttribute("ticketsByCategory", ticketsByCategory.stream().map(a -> new TicketsByTicketCategory(a.getKey(), a.getValue())).collect(Collectors.toList()));
+            model.addAttribute("ticketsByCategory", ticketsByCategory.stream()
+                .map(a -> new TicketsByTicketCategory(a.getKey().getName(), toBookingInfoTicket(a.getValue())))
+                .collect(Collectors.toList()));
         }
 
         return ResponseEntity.ok(model.asMap());
@@ -190,6 +177,17 @@ public class ReservationApiV2Controller {
         } else {
             return ResponseEntity.ok(false);
         }
+    }
+
+    private static List<BookingInfo.BookingInfoTicket> toBookingInfoTicket(List<TicketDecorator> ticketDecorators) {
+        return ticketDecorators.stream()
+            .map(td -> new BookingInfo.BookingInfoTicket(td.getUuid(),
+                td.getFirstName(), td.getLastName(),
+                td.getEmail(),
+                td.getFullName(),
+                td.getAssigned(),
+                td.getTicketFieldConfiguration()))
+            .collect(Collectors.toList());
     }
 
 }
