@@ -17,6 +17,7 @@
 package alfio.controller.api.v2.user;
 
 import alfio.controller.ReservationController;
+import alfio.controller.api.v2.user.model.ValidatedResponse;
 import alfio.controller.form.ContactAndTicketsForm;
 import alfio.controller.form.PaymentForm;
 import alfio.controller.support.SessionUtil;
@@ -118,24 +119,21 @@ public class ReservationApiV2Controller {
         return ResponseEntity.ok(true);
     }
 
-    @PostMapping("/tmp/event/{eventName}/reservation/{reservationId}")
-    public ResponseEntity<Map<String, ?>> handleReservation(@PathVariable("eventName") String eventName,
-                                  @PathVariable("reservationId") String reservationId,
-                                  @RequestBody  PaymentForm paymentForm,
-                                  BindingResult bindingResult,
-                                  Model model,
-                                  HttpServletRequest request,
-                                  Locale locale,
-                                  RedirectAttributes redirectAttributes,
-                                  HttpSession session) {
+    @PostMapping("/event/{eventName}/reservation/{reservationId}")
+    public ResponseEntity<ValidatedResponse<Boolean>> handleReservation(@PathVariable("eventName") String eventName,
+                                                               @PathVariable("reservationId") String reservationId,
+                                                               @RequestBody  PaymentForm paymentForm,
+                                                               BindingResult bindingResult,
+                                                               Model model,
+                                                               HttpServletRequest request,
+                                                               Locale locale,
+                                                               RedirectAttributes redirectAttributes,
+                                                               HttpSession session) {
         //FIXME check precondition (see ReservationController.redirectIfNotValid)
-
-        var res = reservationController.handleReservation(eventName, reservationId, paymentForm,
+        reservationController.handleReservation(eventName, reservationId, paymentForm,
             bindingResult, model, request, locale, redirectAttributes,
             session);
-        Map<String, Object> mapRes = new HashMap<>();
-        mapRes.put("viewState", res);
-        return ResponseEntity.ok(mapRes);
+        return ResponseEntity.ok(ValidatedResponse.toResponse(bindingResult, !bindingResult.hasErrors()));
     }
 
     @PostMapping("/tmp/event/{eventName}/reservation/{reservationId}/validate-to-overview")
