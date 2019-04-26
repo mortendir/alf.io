@@ -19,6 +19,7 @@ package alfio.controller.api.v2.user.model;
 import alfio.model.result.ValidationResult;
 import lombok.AllArgsConstructor;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,9 +32,14 @@ public class ValidatedResponse<T> {
 
     public static <T> ValidatedResponse<T> toResponse(BindingResult bindingResult, T value) {
 
-        var transformed = bindingResult.getAllErrors().stream().map(objectError ->
-            new ValidationResult.ErrorDescriptor(objectError.getObjectName(), objectError.getCode())
-        ).collect(Collectors.toList());
+        var transformed = bindingResult.getAllErrors().stream().map(objectError -> {
+            if (objectError instanceof FieldError) {
+                var fe = (FieldError) objectError;
+                return new ValidationResult.ErrorDescriptor(fe.getField(), fe.getCode());
+            } else {
+                return new ValidationResult.ErrorDescriptor(objectError.getObjectName(), objectError.getCode());
+            }
+        }).collect(Collectors.toList());
 
         return new ValidatedResponse<>(ValidationResult.failed(transformed), value);
     }

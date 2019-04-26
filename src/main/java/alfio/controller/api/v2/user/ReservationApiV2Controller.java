@@ -136,8 +136,8 @@ public class ReservationApiV2Controller {
         return ResponseEntity.ok(ValidatedResponse.toResponse(bindingResult, !bindingResult.hasErrors()));
     }
 
-    @PostMapping("/tmp/event/{eventName}/reservation/{reservationId}/validate-to-overview")
-    public ResponseEntity<Map<String, ?>> validateToOverview(@PathVariable("eventName") String eventName,
+    @PostMapping("/event/{eventName}/reservation/{reservationId}/validate-to-overview")
+    public ResponseEntity<ValidatedResponse<Boolean>> validateToOverview(@PathVariable("eventName") String eventName,
                                                              @PathVariable("reservationId") String reservationId,
                                                              @RequestBody ContactAndTicketsForm contactAndTicketsForm,
                                                              BindingResult bindingResult,
@@ -146,12 +146,9 @@ public class ReservationApiV2Controller {
                                                              Locale locale) {
 
         //FIXME check precondition (see ReservationController.redirectIfNotValid)
+        reservationController.validateToOverview(eventName, reservationId, contactAndTicketsForm, bindingResult, request, redirectAttributes, locale);
 
-        var res = reservationController.validateToOverview(eventName, reservationId, contactAndTicketsForm, bindingResult, request, redirectAttributes, locale);
-        var model = new HashMap<String, Object>();
-        model.put("viewState", res);
-        //model.put("bindingResult", bindingResult.getModel()); <- cause 400 error
-        return ResponseEntity.ok(model);
+        return ResponseEntity.ok(ValidatedResponse.toResponse(bindingResult, !bindingResult.hasErrors()));
     }
 
     @GetMapping("/tmp/event/{eventName}/reservation/{reservationId}/overview")
