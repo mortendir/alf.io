@@ -17,10 +17,7 @@
 package alfio.controller.api.v2.user;
 
 import alfio.controller.EventController;
-import alfio.controller.api.v2.user.model.BasicEventInfo;
-import alfio.controller.api.v2.user.model.EventWithAdditionalInfo;
-import alfio.controller.api.v2.user.model.TicketCategories;
-import alfio.controller.api.v2.user.model.TicketCategory;
+import alfio.controller.api.v2.user.model.*;
 import alfio.controller.decorator.SaleableTicketCategory;
 import alfio.controller.form.ReservationForm;
 import alfio.manager.EventManager;
@@ -143,24 +140,23 @@ public class EventApiV2Controller {
         return eventController.savePromoCode(eventName, promoCode, model, request);
     }
 
-    @PostMapping(value = "tmp/event/{eventName}/reserve-tickets")
-    public ResponseEntity<Map<String, ?>> reserveTicket(@PathVariable("eventName") String eventName,
-                                               @RequestBody ReservationForm reservation,
-                                               BindingResult bindingResult,
-                                               ServletWebRequest request,
-                                               RedirectAttributes redirectAttributes,
-                                               Locale locale) {
+    @PostMapping(value = "event/{eventName}/reserve-tickets")
+    public ResponseEntity<ValidatedResponse<String>> reserveTicket(@PathVariable("eventName") String eventName,
+                                                                   @RequestBody ReservationForm reservation,
+                                                                   BindingResult bindingResult,
+                                                                   ServletWebRequest request,
+                                                                   RedirectAttributes redirectAttributes,
+                                                                   Locale locale) {
 
         String redirectResult = eventController.reserveTicket(eventName, reservation, bindingResult, request, redirectAttributes, locale);
 
         if (bindingResult.hasErrors()) {
-            return new ResponseEntity<>(redirectAttributes.asMap(), getCorsHeaders(), HttpStatus.OK);
+            return new ResponseEntity<>(ValidatedResponse.toResponse(bindingResult, null), getCorsHeaders(), HttpStatus.OK);
         } else {
             String reservationIdentifier = redirectResult
                 .substring(redirectResult.lastIndexOf("reservation/")+"reservation/".length())
                 .replace("/book", "");
-            redirectAttributes.addAttribute("reservationIdentifier", reservationIdentifier);
-            return ResponseEntity.ok(redirectAttributes.asMap());
+            return ResponseEntity.ok(new ValidatedResponse<>(ValidationResult.success(), reservationIdentifier));
         }
 
     }
