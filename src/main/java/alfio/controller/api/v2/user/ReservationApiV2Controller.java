@@ -226,8 +226,10 @@ public class ReservationApiV2Controller {
             .map(tfc -> {
                 var tfd = descriptionsByTicketFieldId.get(tfc.getId()).get(0);//take first, temporary!
                 var fieldValue = valueById.get(tfc.getId());
-                return new TicketFieldConfigurationDescriptionAndValue(tfc, tfd, 1, fieldValue == null ? null : fieldValue.getValue());
-            }).map(t -> toAdditionalField(t, fromFieldDescriptions(descriptionsByTicketFieldId.get(t.getTicketFieldConfigurationId())))).collect(Collectors.toList());
+                var t = new TicketFieldConfigurationDescriptionAndValue(tfc, tfd, 1, fieldValue == null ? null : fieldValue.getValue());
+                var descs = fromFieldDescriptions(descriptionsByTicketFieldId.get(t.getTicketFieldConfigurationId()));
+                return toAdditionalField(t, descs);
+            }).collect(Collectors.toList());
 
         return new BookingInfo.BookingInfoTicket(ticket.getUuid(),
             ticket.getFirstName(), ticket.getLastName(),
