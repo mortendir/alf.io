@@ -223,6 +223,7 @@ public class ReservationApiV2Controller {
         return new ReservationInfo.BookingInfoTicket(ticket.getUuid(),
             ticket.getFirstName(), ticket.getLastName(),
             ticket.getEmail(), ticket.getFullName(),
+            ticket.getUserLanguage(),
             ticket.getAssigned(), tfcdav);
     }
 
